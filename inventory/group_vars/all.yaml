@@ -1,12 +1,14 @@
 ---
-# etcd集群地址
-etcd_endpoints: 10.255.1.173:2379,http://10.255.1.63:2379,http://10.255.1.16:2379
 
 # flanneld config
 flannel_etcd_prefix: /kube-centos/network
 flannel_log_dir: /data/logs/flannel
 flannel_conf_dir: /data/apps/flannel/conf
 flannel_bin_dir: /data/apps/flannel/bin
+flannel_network: 172.30.0.0/16
+flannel_subnet_len: 24
+flannel_backend_type: vxlan
+flannel_key: /kube-centos/network/config
 
 #node config
 
@@ -56,3 +58,6 @@ etcd_version: v3.1.8
 etcd_peer_group: etcd
 etcd_peer_port: 2380
 etcd_client_port: 2379
+etcd_peer_ca_file: "{{ cert_dir }}/ca.pem"
+etcd_peer_cert_file: "{{ cert_dir}}/kubernetes.pem"
+etcd_peer_key_file: "{{ cert_dir}}/kubernetes-key.pem"
