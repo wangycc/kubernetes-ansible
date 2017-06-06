@@ -10,12 +10,12 @@ WorkingDirectory={{ etcd_data_dir }}
 EnvironmentFile=-{{etcd_conf_dir}}/etcd.conf
 ExecStart={{ etcd_bin_dir }}/etcd \
   --name ${ETCD_NAME} \
-  --cert-file=/etc/kubernetes/ssl/kubernetes.pem \
-  --key-file=/etc/kubernetes/ssl/kubernetes-key.pem \
-  --peer-cert-file=/etc/kubernetes/ssl/kubernetes.pem \
-  --peer-key-file=/etc/kubernetes/ssl/kubernetes-key.pem \
-  --trusted-ca-file=/etc/kubernetes/ssl/ca.pem \
-  --peer-trusted-ca-file=/etc/kubernetes/ssl/ca.pem \
+  --cert-file={{ etcd_peer_cert_file}} \
+  --key-file={{ etcd_peer_key_file}} \
+  --peer-cert-file={{ etcd_peer_cert_file}} \
+  --peer-key-file={{ etcd_peer_key_file }} \
+  --trusted-ca-file={{ etcd_peer_ca_file }} \
+  --peer-trusted-ca-file={{ etcd_peer_ca_file }} \
   --initial-advertise-peer-urls ${ETCD_INITIAL_ADVERTISE_PEER_URLS} \
   --listen-peer-urls ${ETCD_LISTEN_PEER_URLS} \
   --listen-client-urls ${ETCD_LISTEN_CLIENT_URLS} \
