@@ -1,5 +1,5 @@
 {
-  "CN": "system:nodes",
+  "CN": "kubelet",
   "hosts": [],
   "key": {
     "algo": "rsa",
@@ -10,7 +10,7 @@
       "C": "CN",
       "ST": "BeiJing",
       "L": "BeiJing",
-      "O": "k8s",
+      "O": "system:nodes",
       "OU": "System"
     }
   ]
