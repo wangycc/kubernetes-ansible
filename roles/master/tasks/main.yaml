@@ -1,0 +1,82 @@
+---
+- name: Create the master  data directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - "{{ master_log_dir }}"
+    - "{{ master_conf_dir }}"
+    - "{{ master_bin_dir }}"
+
+- include: cert.yaml
+
+- name: Create TLS Bootstrapping Token
+  template:
+    src: "{{ role_path }}/templates/token.csv"
+    dest: /etc/kubernetes
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy the binary file to master instance.
+  get_url:
+    url: "https://s3.cn-north-1.amazonaws.com.cn/k8s/ansible/master/{{ kubernetes_version }}/{{ item }}"
+    dest: "{{ master_bin_dir}}/{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+    - kubectl
+
+- name: Create kubernets master Configuration file
+  template:
+    src: "{{ role_path  }}/templates/{{ item  }}"
+    dest: "{{ master_conf_dir}}/{{ item  }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - apiserver
+    - controller-manager
+    - config
+    - scheduler
+  register: change_master_config
+
+- name: Copy the systemd unit file to node
+  template:
+    src: "{{ role_path }}/templates/service/{{ item }}"
+    dest: "/usr/lib/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - kube-apiserver.service
+    - kube-controller-manager.service
+    - kube-scheduler.service
+  register: change_master_system
+
+- name: start and enable master service
+  when: change_master_system|succeeded and change_master_system|succeeded
+  systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+- name: reload node service
+  when: change_master_system|changed or change_master_config|changed
+  systemd:
+    name: "{{ item  }}"
+    state: restarted
+    daemon_reload: true
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler

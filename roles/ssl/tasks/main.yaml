@@ -1,0 +1,38 @@
+---
+
+- name: Create ssl cert dir
+  local_action: 
+    module: file
+    path: "{{ cert_dir_tmp }}"
+    state: directory
+  register: master_ssl_dir
+
+- name: Copy conf file to create certificate
+  local_action:
+    module: template
+    src: "{{ item }}"
+    dest: "{{ cert_dir_tmp }}/{{ item }}"
+  with_items:
+    - ca-config.json
+    - ca-csr.json
+    - kubernetes-csr.json
+    - admin-csr.json
+    - kube-proxy-csr.json
+    - kubelet-csr.json
+
+- stat: path={{ cert_dir_tmp }}/ca-key.pem
+  register: ca_key_stat
+
+- name: Create kubernetes certificates
+  when: not ca_key_stat.stat.exists
+  register: create_cert
+  shell: "{{ item }}" 
+  args: 
+    chdir: "{{ cert_dir_tmp }}"
+  with_items:
+    - "{{ role_path }}/files/cfssl gencert -initca ca-csr.json | {{ role_path }}/files/cfssljson -bare ca"
+    - "{{ role_path }}/files/cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kubernetes-csr.json | {{ role_path }}/files/cfssljson -bare kubernetes"
+    - "{{ role_path }}/files/cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes admin-csr.json | {{ role_path }}/files/cfssljson -bare admin"
+    - "{{ role_path }}/files/cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes  kube-proxy-csr.json | {{ role_path }}/files/cfssljson -bare kube-proxy"
+    - "{{ role_path }}/files/cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes  kubelet-csr.json | {{ role_path }}/files/cfssljson -bare kubelet"
+

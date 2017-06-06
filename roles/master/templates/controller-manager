@@ -1,0 +1,7 @@
+###
+# The following values are used to configure the kubernetes controller-manager
+
+# defaults from config and apiserver should be adequate
+
+# Add your own!
+KUBE_CONTROLLER_MANAGER_ARGS="--address=127.0.0.1 --cluster-cidr=172.30.0.0/16 --service-cluster-ip-range=10.254.0.0/16 --cluster-name=kubernetes --cluster-signing-cert-file={{ cert_dir }}/ca.pem --cluster-signing-key-file={{ cert_dir }}/ca-key.pem  --service-account-private-key-file={{ cert_dir }}/ca-key.pem --root-ca-file={{ cert_dir }}/ca.pem --leader-elect=true --cloud-provider=aws"

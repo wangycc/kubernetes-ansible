@@ -1,0 +1,14 @@
+[master]
+{% for ip in masters %}
+{{ ip }}
+{% endfor %}
+
+[node]
+{% for ip in nodes %}
+{{ip}}
+{{endfor}}
+
+[etcd]
+{% for ip in masters%}
+{{ip}}
+{% endfor %}

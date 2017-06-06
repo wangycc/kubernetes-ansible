@@ -1,0 +1,61 @@
+---
+
+- name: Create directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - "{{ etcd_conf_dir }}"
+    - "{{ etcd_bin_dir }}"
+    - "{{ etcd_data_dir }}"
+
+- include: cert.yaml 
+
+- name: Copy the binary file to node instance.
+  get_url:
+    url: "https://s3.cn-north-1.amazonaws.com.cn/k8s/ansible/etcd/{{ etcd_version }}/{{ item  }}"
+    dest: "{{ etcd_bin_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - etcd
+    - etcdctl
+
+- name: Create etcd Configuration file
+  template:
+    src: "{{ role_path }}/templates/{{ item }}"
+    dest: "{{ etcd_conf_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - etcd.conf
+  register: change_etcd_config
+
+- name: Copy the systemd unit file to node
+  template:
+    src: "{{ role_path }}/templates/service/{{ item }}"
+    dest: "/usr/lib/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - etcd.service
+  register: change_etcd_system
+
+- name: start and enable etcd service
+  when: change_etcd_system|succeeded and change_etcd_system|succeeded
+  systemd:
+    name: etcd
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: reload etcd service
+  when: change_etcd_config|changed or change_etcd_system|changed
+  systemd:
+    name: etcd
+    state: restarted
+    daemon_reload: true

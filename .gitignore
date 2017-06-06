@@ -1,0 +1,14 @@
+*.retry
+temp
+.DS_Store
+.idea
+.tox
+.cache
+*.bak
+*.egg-info
+*.pyc
+*.pyo
+*.tfstate
+*.tfstate.backup
+**/*.sw[pon]
+**/*.sw[pon]

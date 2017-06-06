@@ -1,0 +1,58 @@
+---
+# etcd集群地址
+etcd_endpoints: 10.255.1.173:2379,http://10.255.1.63:2379,http://10.255.1.16:2379
+
+# flanneld config
+flannel_etcd_prefix: /kube-centos/network
+flannel_log_dir: /data/logs/flannel
+flannel_conf_dir: /data/apps/flannel/conf
+flannel_bin_dir: /data/apps/flannel/bin
+
+#node config
+
+kubelet_api_server: http://internal-kubernetes-elb-1690332543.cn-north-1.elb.amazonaws.com.cn:8080
+
+kubelet_pod_infra_container: hub.meiqia.com/google_gcr/pause-amd64:3.0
+
+
+#master config
+master_conf_dir: /data/apps/kubernetes/conf
+master_bin_dir: /data/apps/kubernetes/bin
+master_log_dir: /data/logs/kubernetes 
+BOOTSTRAP_TOKEN: b1eaeb543fbfcacc7e598ced4086d02e
+
+#node config
+kubernetes_conf_dir: /data/apps/kubernetes/conf
+kubernetes_bin_dir: /data/apps/kubernetes/bin
+kubernetes_log_dir: /data/logs/kubernetes
+
+kubernetes_version: v1.6.4
+
+cert_dir_tmp: /tmp/test/ssl 
+cert_dir: /etc/kubernetes/ssl
+ssl_config:
+  ip_list:
+    - 127.0.0.1
+    - 10.254.0.1
+    - 10.255.2.93
+    - 10.255.2.228
+    - 10.255.4.214 
+  dns:
+    - kubernetes
+    - kubernetes.default
+    - kubernetes.default.svc
+    - kubernetes.default.svc.cluster
+    - kubernetes.default.svc.cluster.local
+    - k8s.meiqia.com
+    - internal-kubernetes-apiserver-elb-974829386.cn-north-1.elb.amazonaws.com.cn
+
+#etcd config
+
+etcd_peer_url_scheme: https
+etcd_data_dir: /data/apps/etcd/data
+etcd_conf_dir: /data/apps/etcd/etc
+etcd_bin_dir: /data/apps/etcd/bin
+etcd_version: v3.1.8
+etcd_peer_group: etcd
+etcd_peer_port: 2380
+etcd_client_port: 2379

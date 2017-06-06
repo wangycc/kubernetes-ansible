@@ -1,0 +1,32 @@
+---
+- name: Public Route
+  ec2_vpc_route_table:
+    vpc_id: "{{ _vpc.vpc.id }}"
+    tags:
+      Name: "{{ k8s_cluster }}_public_rtb"
+      KubernetesCluster: "{{ k8s_cluster }}"
+    subnets: "{{ _subnet.results | selectattr('item.route', 'equalto', 'Public') | map(attribute='subnet.id') | list }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ _igw.gateway_id  }}"
+    region: "{{ region }}"
+  register: _public_route
+- debug: var=_public_route verbosity=1
+
+
+- name: Private Route
+  ec2_vpc_route_table:
+    vpc_id: "{{ _vpc.vpc.id }}"
+    tags:
+      Name: "{{ k8s_cluster }}_Private_{{ item.item.subnet.availability_zone }}_rtb"
+      KubernetesCluster: "{{ k8s_cluster }}"
+    subnets: "{{k8s_cluster}}_private_{{ item.item.subnet.availability_zone }}"
+    region: "{{ region }}"
+    routes:
+      - dest: 0.0.0.0/0
+        instance_id: "{{ item.instance_ids.0}}"
+  with_items: "{{ _nat_instance.results  }}"
+  register: _private_route
+  when: _nat_instance.changed == true
+
+- debug: var=_private_route verbosity=1

@@ -1,0 +1,8 @@
+---
+- hosts: etcd
+  tasks:
+    - name: local_action test
+      local_action: command  hostname 
+      become: False
+  #roles:
+  #  - master
