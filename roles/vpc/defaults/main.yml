@@ -1,19 +1,4 @@
 ---
-k8s_cluster: kubernetes
-env: Kubernete Pro
-region: cn-north-1
-nat_security_group: "{{ k8s_cluster }}_nat_sg"
-master_security_group: "{{ k8s_cluster }}_master_sg"
-node_security_group: "{{ k8s_cluster }}_node_sg"
-
-master_image: ami-b9fe28d4
-node_image: ami-b9fe28d4
-master_instance_type: t2.micro
-node_instance_type: t2.micro
-
-key_pair: k8s-key
-
-
 vpc:
   name: "{{ k8s_cluster }}-vpc"
   cidr_block: 10.255.0.0/16

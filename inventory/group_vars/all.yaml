@@ -1,11 +1,25 @@
 ---
+#AWS VPC config
+k8s_cluster: kubernetes
+env: Kubernete Pro
+region: cn-north-1
+nat_security_group: "{{ k8s_cluster }}_nat_sg"
+master_security_group: "{{ k8s_cluster }}_master_sg"
+node_security_group: "{{ k8s_cluster }}_node_sg"
+
+master_image: ami-b9fe28d4
+node_image: ami-b9fe28d4
+master_instance_type: t2.micro
+node_instance_type: t2.micro
+
+key_pair: k8s-key
 
 # flanneld config
 flannel_etcd_prefix: /kube-centos/network
 flannel_log_dir: /data/logs/flannel
 flannel_conf_dir: /data/apps/flannel/conf
 flannel_bin_dir: /data/apps/flannel/bin
-flannel_network: 172.30.0.0/16
+flannel_network: "{{ cluster_cidr }}"
 flannel_subnet_len: 24
 flannel_backend_type: vxlan
 flannel_key: /kube-centos/network/config
@@ -15,6 +29,8 @@ flannel_key: /kube-centos/network/config
 kubelet_api_server: http://internal-kubernetes-elb-1690332543.cn-north-1.elb.amazonaws.com.cn:8080
 
 kubelet_pod_infra_container: hub.meiqia.com/google_gcr/pause-amd64:3.0
+cluster_dns: 10.254.0.2
+cluster_cidr: 172.30.0.0/16
 
 
 #master config
