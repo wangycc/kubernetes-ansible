@@ -11,6 +11,11 @@
 
 - include: cert.yaml
 
+- name: write the kubectl.kubeconfig (auth) file for kubectl
+  template:
+    src: kubectl.kubeconfig
+    dest: "{{ kubernetes_conf_dir }}/kubectl.kubeconfig"
+
 - name: Create TLS Bootstrapping Token
   template:
     src: "{{ role_path }}/templates/token.csv"
