@@ -4,13 +4,11 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 After=network.target
 
 [Service]
-EnvironmentFile=-{{ kubernetes_conf_dir }}/config
 EnvironmentFile=-{{ kubernetes_conf_dir }}/proxy
 ExecStart={{ kubernetes_bin_dir }}/kube-proxy \
                                 $KUBE_LOGTOSTDERR \
                                 $KUBE_LOG_LEVEL \
                                 $KUBE_LOG_DIR \
-                                $KUBE_MASTER \
                                 $KUBE_PROXY_ARGS
 
 Restart=on-failure

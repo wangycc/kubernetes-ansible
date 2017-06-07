@@ -12,9 +12,23 @@
 
 - include: cert.yaml
 
+- name: write the kubelet.kubeconfig(auth) file for kubelet
+  temaplte:
+    src: kubelet.kubeconfig
+    dest: "{{ kubernetes_conf_dir }}/kubelet.kubeconfig"
+    backup: yes
+  notify: restart kubelet
+- name: write the kube-proxy.kubeconfig(auth) file for kube-proxy
+  temaplte:
+    src: kube-peoxy.kubeconfig
+    dest: "{{ kubernetes_conf_dir }}/kube-proxy.kubeconfig"
+    backup: yes
+  notify: restart kube-proxy
+  
+
 - name: Copy the binary file to node instance.
   get_url:
-    url: "https://s3.cn-north-1.amazonaws.com.cn/k8s/ansible/node/v1.6.1/{{ item }}"
+    url: "https://s3.cn-north-1.amazonaws.com.cn/k8s/ansible/node/{{ kubernetes_version }}/{{ item }}"
     dest: "{{ kubernetes_bin_dir }}/{{ item }}"
     owner: root
     group: root

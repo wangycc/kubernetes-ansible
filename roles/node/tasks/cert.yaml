@@ -9,6 +9,8 @@
     - admin.pem
     - kube-proxy-key.pem
     - kube-proxy.pem
+    - kubelet.pem
+    - kubelet-key.pem
     - kubernetes-key.pem
     - kubernetes.pem
     - ca-key.pem
