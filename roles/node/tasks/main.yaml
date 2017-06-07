@@ -13,13 +13,13 @@
 - include: cert.yaml
 
 - name: write the kubelet.kubeconfig(auth) file for kubelet
-  temaplte:
+  template:
     src: kubelet.kubeconfig
     dest: "{{ kubernetes_conf_dir }}/kubelet.kubeconfig"
     backup: yes
   notify: restart kubelet
 - name: write the kube-proxy.kubeconfig(auth) file for kube-proxy
-  temaplte:
+  template:
     src: kube-peoxy.kubeconfig
     dest: "{{ kubernetes_conf_dir }}/kube-proxy.kubeconfig"
     backup: yes
