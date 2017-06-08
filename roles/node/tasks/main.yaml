@@ -20,7 +20,7 @@
   notify: restart kubelet
 - name: write the kube-proxy.kubeconfig(auth) file for kube-proxy
   template:
-    src: kube-peoxy.kubeconfig
+    src: kube-proxy.kubeconfig
     dest: "{{ kubernetes_conf_dir }}/kube-proxy.kubeconfig"
     backup: yes
   notify: restart kube-proxy
@@ -47,7 +47,6 @@
   with_items:
     - kubelet
     - proxy
-    - config
   register: change_kubelet_config
 
 - name: Copy the systemd unit file to node
