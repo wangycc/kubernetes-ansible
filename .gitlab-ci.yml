@@ -3,4 +3,4 @@ image: hub.meiqia.com/devops/ansible-lint
 
 ansible-lint:
   script:
-    - ansible-lint playbook/*.yml
+    - ansible-lint playbooks/*.yml
