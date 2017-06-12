@@ -20,7 +20,23 @@
     - "{{ flannel_log_dir }}"
     - "{{ flannel_conf_dir }}"
     - "{{ flannel_bin_dir }}"
+    - "{{ cert_dir  }}"
     - /usr/lib/systemd/system/docker.service.d
+
+- name: slurp CA certificate from ansible host
+  slurp: src={{ cert_dir_tmp  }}/{{ item  }}
+  with_items:
+    - kubernetes-key.pem
+    - kubernetes.pem
+    - ca.pem
+  register: pki_certs
+  run_once: true
+  delegate_to: localhost
+
+- name: write CA certificate from ansible host to disk
+  copy: dest={{ cert_dir  }}/{{ item.item  }} content="{{ item.content | b64decode  }}"
+  register: openssl_cert
+  with_items: "{{ pki_certs.results  }}"
 
 - name: Copy binary to node instance
   get_url:
