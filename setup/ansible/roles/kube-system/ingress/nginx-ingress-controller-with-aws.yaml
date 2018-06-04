@@ -1,0 +1,183 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nginx-default-backend
+  namespace: nginx-ingress
+  labels:
+    k8s-addon: ingress-nginx.addons.k8s.io
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+  selector:
+    app: nginx-default-backend
+
+---
+
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: nginx-default-backend
+  namespace: nginx-ingress
+  labels:
+    k8s-addon: ingress-nginx.addons.k8s.io
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        k8s-addon: ingress-nginx.addons.k8s.io
+        app: nginx-default-backend
+    spec:
+      terminationGracePeriodSeconds: 60
+      serviceAccount: nginx-ingress-serviceaccount
+      nodeSelector:
+        department: crm
+      containers:
+        - name: default-http-backend
+          image: hub.meiqia.com/kubernetes/defaultbackend:1.3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 10m
+              memory: 20Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+
+---
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: ingress-nginx
+  namespace: nginx-ingress
+  labels:
+    k8s-addon: ingress-nginx.addons.k8s.io
+data:
+  # use-proxy-protocol: "true"
+  server-tokens: "false"
+  enable-vts-status: "true"
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: ingress-nginx
+  namespace: nginx-ingress
+  labels:
+    k8s-addon: ingress-nginx.addons.k8s.io
+  annotations:
+    # service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: '*'
+    service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+spec:
+  type: LoadBalancer
+  selector:
+    app: ingress-nginx
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+    - name: https
+      port: 443
+      targetPort: https
+    - name: status
+      port: 8081
+      targetPort: 18080
+    # 实施调用crm平台微服务GRPC接口
+    - name: territory
+      port: 7131
+      targetPort: territory
+    - name: tri
+      port: 7000
+      protocol: TCP
+      targetPort: tri
+    - name: judge
+      port: 7110
+      targetPort: judge
+    - name: tenant
+      port: 7123
+      targetPort: tenant
+
+
+---
+
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: ingress-nginx
+  namespace: nginx-ingress
+  labels:
+    k8s-addon: ingress-nginx.addons.k8s.io
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ingress-nginx
+        k8s-addon: ingress-nginx.addons.k8s.io
+    spec:
+      terminationGracePeriodSeconds: 60
+      serviceAccountName: nginx-ingress-serviceaccount
+      nodeSelector:
+        department: crm
+      containers:
+        - image: hub.meiqia.com/kubernetes/nginx-ingress-controller:0.9.0
+          name: ingress-nginx
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+            - name: https
+              containerPort: 443
+              protocol: TCP
+            - name: status
+              containerPort: 18080
+              protocol: TCP
+            - name: territory
+              containerPort: 7131
+              protocol: TCP
+            - name: tri
+              containerPort: 7000
+              protocol: TCP
+            - name: judge
+              containerPort: 7110
+              protocol: TCP
+            - name: tenant
+              containerPort: 7123
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 10254
+              scheme: HTTP
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          args:
+            - /nginx-ingress-controller
+            - --default-backend-service=$(POD_NAMESPACE)/nginx-default-backend
+            - --configmap=$(POD_NAMESPACE)/ingress-nginx
+            - --publish-service=$(POD_NAMESPACE)/ingress-nginx
+            - --tcp-services-configmap=$(POD_NAMESPACE)/tcp-ingress-configmap

@@ -1,0 +1,71 @@
+---
+- name: "Create VPC"
+  ec2_vpc_net:
+    name: "{{ vpc.name }}"
+    cidr_block: "{{ vpc.cidr_block }}"
+    region: "{{ region }}"
+    tags:
+      KubernetesCluster: "{{ k8s_cluster }}"
+  register: _vpc
+
+- debug:
+    var: _vpc.stdout
+    verbosity: 1
+
+
+- name: Create an IGW gateway
+  ec2_vpc_igw:
+    vpc_id: "{{ _vpc.vpc.id }}"
+    region: "{{ region }}"
+  register: _igw
+
+- name: Created security group
+  include: sg.yml
+  tags:
+    - sg
+
+- name: "Create a public subnet and private subnet for each az"
+  ec2_vpc_subnet:
+    vpc_id: "{{ _vpc.vpc.id }}"
+    az: "{{ item.az }}"
+    cidr: "{{ item.cidr }}"
+    resource_tags:
+      Name: "{{ item.name }}"
+      KubernetesCluster: "{{ k8s_cluster }}"
+    region: "{{ region }}"
+  with_items: "{{ subnet }}"
+  register: _subnet
+- debug: var=_subnet verbosity=1
+
+- name: Create a NAT instance gateway
+  ec2:
+    region: "{{ region }}"
+    keypair: "{{ key_pair }}"
+    instance_type: "{{ nat_instance_type }}"
+    image: "{{ nat_image }}"
+    vpc_subnet_id: "{{ item.subnet.id }}"
+    group: "{{ nat_security_group }}"
+    wait: true
+    instance_tags:
+      Name: "{{ k8s_cluster }}_nat_instance_{{ item.subnet.availability_zone }}"
+      KubernetesCluster: "{{ k8s_cluster }}"
+    source_dest_check: false
+    assign_public_ip: true
+    exact_count: 1
+    count_tag:
+      Name: "{{ k8s_cluster }}_nat_instance_{{ item.subnet.availability_zone }}"
+      KubernetesCluster: "{{ k8s_cluster }}"
+  with_items: "{{ _subnet.results | selectattr('item.route', 'equalto', 'Public')|list}}"
+  register: _nat_instance
+- debug: var=_nat_instance verbosity=1
+
+- name: Create a "{{ k8s_cluster }}" routing table
+  include: rtb.yml
+
+- name: Create IAM role
+  include: role.yml
+
+- name: Create EC2 instance
+  include: instance.yml
+
+- include: elb.yml

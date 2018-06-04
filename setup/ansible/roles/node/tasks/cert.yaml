@@ -1,0 +1,25 @@
+---
+- name: create kubernetes cert directory
+  file: path={{ cert_dir }} state=directory
+
+- name: slurp CA certificate from ansible host
+  slurp: src={{ cert_dir_tmp }}/{{ item }}
+  with_items:
+    - admin-key.pem
+    - admin.pem
+    - kube-proxy-key.pem
+    - kube-proxy.pem
+    - kubelet.pem
+    - kubelet-key.pem
+    - kubernetes-key.pem
+    - kubernetes.pem
+    - ca-key.pem
+    - ca.pem
+  register: pki_certs
+  run_once: true
+  delegate_to: localhost
+
+- name: write CA certificate from ansible host to disk
+  copy: dest={{ cert_dir }}/{{ item.item }} content="{{ item.content | b64decode }}"
+  register: openssl_cert
+  with_items: "{{ pki_certs.results }}"

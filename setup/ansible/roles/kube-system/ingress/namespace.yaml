@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: nginx-ingress
+---
+apiVersion: v1
+data:
+    .dockercfg: eyJodHRwczovL2h1Yi5tZWlxaWEuY29tIjp7InVzZXJuYW1lIjoia3ViZXJuZXRlcyIsInBhc3N3b3JkIjoiRHl4YlQzMnRWemRnaD1QWmRKWlAiLCJlbWFpbCI6InNhQG1laXFpYS5jb20iLCJhdXRoIjoiYTNWaVpYSnVaWFJsY3pwRWVYaGlWRE15ZEZaNlpHZG9QVkJhWkVwYVVBPT0ifX0=
+kind: Secret
+metadata:
+    name: docker-secret
+    namespace: crm-platform
+type: kubernetes.io/dockercfg

@@ -11,4 +11,5 @@ temp
 *.tfstate
 *.tfstate.backup
 **/*.sw[pon]
-**/*.sw[pon]
+downloads/
+resources/

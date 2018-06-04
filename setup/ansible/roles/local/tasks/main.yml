@@ -1,0 +1,75 @@
+# do actual downloading
+- include_vars: file={{ inventory_dir }}/group_vars/all.yaml
+
+- name: create downloads and resources directories
+  file: path="{{ item}}" state=directory mode=0755
+  with_items:
+    - "{{ downloads_dir }}"
+    - "{{ resources_dir }}"
+    - "{{ resources_dir }}/bin"
+
+- name: "download kubernetes binary {{ test_kubernetes }}"
+  get_url: url={{ item.url }} dest={{ downloads_dir }}/{{ item.name }}-{{ item.version }}.tar.gz force=yes validate_certs=no
+  with_items: 
+    - "{{ kubernetes_packages }}" 
+  
+- name: download etcd binary
+  get_url: url={{ item.url }} dest={{ downloads_dir }}/etcd-{{ etcd_version }}.tar.gz force=yes validate_certs=no
+  with_items: 
+    - "{{ etcd_packages }}" 
+
+- name: download flannel binary
+  get_url: url={{ item.url }} dest={{ downloads_dir }}/flannel-{{ flannel_version }}.tar.gz force=yes validate_certs=no
+  with_items: 
+    - "{{ flannel_packages }}"
+
+- name: unarchive kubernetes binary
+  shell: ls -1 {{ item.name }}-{{ item.version }}.tar.gz | xargs -n1 tar xzf
+  args:
+    chdir: "{{ downloads_dir }}"
+    warn: no
+  with_items: "{{ kubernetes_packages }}"
+
+- name: unarchive etcd binary
+  shell: ls -1 etcd-{{ etcd_version }}.tar.gz | xargs -n1 tar xzf
+  args:
+    chdir: "{{ downloads_dir }}"
+    warn: no
+
+- name: unarchive flanneld binary
+  shell: ls -1 flannel-{{ flannel_version }}.tar.gz | xargs -n1 tar xzf
+  args:
+    chdir: "{{ downloads_dir }}"
+    warn: no
+
+
+- name: cp flannel binary
+  shell: >
+    cp -v {{ downloads_dir }}/{{ item }} "{{ resources_dir }}/bin/"
+  with_items: 
+    - flanneld
+    - mk-docker-opts.sh
+
+- name: cp etcd binary
+  shell: >
+    cp -v {{ downloads_dir }}/etcd-{{ etcd_version }}-linux-amd64/{{ item }} "{{ resources_dir }}/bin/{{ item }}"
+  with_items: 
+    - etcd
+    - etcdctl
+ 
+- name: cp kubernetes binary
+  shell: >
+    cp -v {{ downloads_dir }}/kubernetes/server/bin/{{ item }} "{{ resources_dir }}/bin/{{ item }}"
+  with_items: 
+    - cloud-controller-manager
+    - kube-apiserver
+    - kube-controller-manager
+    - kubectl
+    - kubelet
+    - kube-proxy
+    - kube-scheduler
+  
+- name: clean up download dir
+  shell: >
+    cd "{{ downloads_dir }}" && find . -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} \; && \
+    mv flanneld mk-docker-opts.sh README.md /tmp/ 

@@ -1,0 +1,30 @@
+---
+- name: Copy the upstart script to node
+  template:
+    src: "{{ role_path }}/templates/{{ item }}.upstart.j2"
+    dest: "/etc/init/{{ item }}.conf"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - kubelet
+    - kube-proxy
+  register: change_kubelet_system
+
+- name: start and enable node service
+  when: change_kubelet_system|succeeded and change_kubelet_system|succeeded
+  service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  with_items:
+    - kubelet
+    - kube-proxy
+- name: restart node service
+  when: change_kubelet_system|changed or change_kubelet_config|changed
+  service:
+    name: "{{ item  }}"
+    state: restarted
+  with_items:
+    - kubelet
+    - kube-proxy

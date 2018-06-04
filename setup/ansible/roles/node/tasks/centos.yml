@@ -1,0 +1,34 @@
+---
+- include: nginx-proxy.yaml
+  when: provider == "common" 
+
+- name: Copy the systemd unit file to node
+  template:
+    src: "{{ role_path }}/templates/service/{{ item }}"
+    dest: "/usr/lib/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - kubelet.service
+    - kube-proxy.service
+  register: change_kubelet_system
+
+- name: start and enable node service
+  when: change_kubelet_system|succeeded and change_kubelet_system|succeeded
+  systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  with_items:
+    - kubelet
+    - kube-proxy
+- name: reload node service
+  when: change_kubelet_system|changed or change_kubelet_config|changed
+  systemd:
+    name: "{{ item  }}"
+    state: restarted
+    daemon_reload: true
+  with_items:
+    - kubelet
+    - kube-proxy

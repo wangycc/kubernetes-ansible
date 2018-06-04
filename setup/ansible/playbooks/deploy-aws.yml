@@ -1,0 +1,7 @@
+---
+- name: Deploy aws
+  hosts: localhost
+  roles:
+    - vpc
+  tags:
+    - aws

@@ -1,0 +1,10 @@
+---
+
+- name: set hostname
+  shell: |
+    hostname=$(curl http://169.254.169.254/latest/meta-data/hostname)
+    echo ${hostname} > /etc/hostname 
+    hostname ${hostname}
+  become: True
+  when: provider == "aws"
+    

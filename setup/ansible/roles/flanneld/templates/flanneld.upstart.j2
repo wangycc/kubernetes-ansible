@@ -1,0 +1,25 @@
+{% macro initial_cluster() -%}
+{% for host in groups[etcd_peer_group] %}
+{{ etcd_peer_url_scheme }}://{{ host }}:{{ etcd_client_port }}
+{%- if not loop.last -%},{%- endif -%}
+{%- endfor -%}
+{% endmacro -%}
+description "Flanneld"
+
+start on runlevel [2345]
+stop on shutdown
+
+respawn
+respawn limit 15 5
+
+
+
+script
+     exec {{ flannel_bin_dir }}/flanneld -etcd-endpoints={{ initial_cluster() }} -etcd-prefix={{ flannel_etcd_prefix }} -etcd-cafile={{ cert_dir }}/ca.pem -etcd-certfile={{ cert_dir }}/kubernetes.pem -etcd-keyfile={{ cert_dir }}/kubernetes-key.pem -log_dir={{flannel_log_dir }} -logtostderr=false
+
+end script
+
+post-start script
+     exec {{ flannel_bin_dir }}/mk-docker-opts.sh -k DOCKER_NETWORK_OPTIONS -d /run/flannel/docker
+#	echo "a" > /tmp/wangyichen
+end script

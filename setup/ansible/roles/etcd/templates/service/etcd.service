@@ -1,0 +1,33 @@
+[Unit]
+Description=Etcd Server
+After=network.target
+After=network-online.target
+Wants=network-online.target
+Documentation=https://github.com/coreos
+[Service]
+Type=notify
+WorkingDirectory={{ etcd_data_dir }}
+EnvironmentFile=-{{etcd_conf_dir}}/etcd.conf
+ExecStart={{ etcd_bin_dir }}/etcd \
+  --name ${ETCD_NAME} \
+  --cert-file={{ etcd_peer_cert_file}} \
+  --key-file={{ etcd_peer_key_file}} \
+  --peer-cert-file={{ etcd_peer_cert_file}} \
+  --peer-key-file={{ etcd_peer_key_file }} \
+  --trusted-ca-file={{ etcd_peer_ca_file }} \
+  --peer-trusted-ca-file={{ etcd_peer_ca_file }} \
+  --initial-advertise-peer-urls ${ETCD_INITIAL_ADVERTISE_PEER_URLS} \
+  --listen-peer-urls ${ETCD_LISTEN_PEER_URLS} \
+  --listen-client-urls ${ETCD_LISTEN_CLIENT_URLS} \
+  --advertise-client-urls ${ETCD_ADVERTISE_CLIENT_URLS} \
+  --initial-cluster-token ${ETCD_INITIAL_CLUSTER_TOKEN} \
+  --initial-cluster-state ${ETCD_INITIAL_CLUSTER_STATE} \
+  --initial-cluster ${ETCD_INITIAL_CLUSTER} \
+  --initial-cluster-state ${ETCD_INITIAL_CLUSTER_STATE} \
+  --data-dir=${ETCD_DATA_DIR}
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

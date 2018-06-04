@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tcp-ingress-configmap
+  namespace: nginx-ingress
+# 实施这边需要调用crm平台的GRPC端口
+data:
+  7131: "crm-platform/territory:7131"
+  7000: "crm-platform/tri:7000"
+  7110: "crm-platform/judge:7110"
+  7123: "crm-platform/tenant:7123"

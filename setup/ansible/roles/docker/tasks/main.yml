@@ -1,0 +1,49 @@
+---
+
+# reference: https://docs.docker.com/engine/installation/linux/docker-ce/centos/#set-up-the-repository
+# The contents of /var/lib/docker/, including images, containers, volumes, and networks, are preserved
+- name: Uninstall old versions
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items: 
+    - docker
+    - docker-common
+    - docker-selinux
+    - docker-engine
+
+- name: enable ipv4 route forward
+  command: |-
+    sysctl -w net.ipv4.ip_forward=1 
+
+- name: Install Docker CE 
+  yum:
+    name: "{{ item.url }}"
+    state: present
+  with_items:
+    - "{{ docker_packages }}"
+
+- name: Create the docker directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - /etc/docker 
+
+- name: Copy docker config
+  template:
+    src: "{{ role_path }}/template/daemon.json.j2"
+    dest: /etc/docker/daemon.json
+    mode: 644
+  notify:
+    - restart docker
+
+- name: Copy docker systemd config
+  template:
+    src: "{{ role_path }}/template/docker.service.j2"
+    dest: /usr/lib/systemd/system/docker.service
+    mode: 644
+  notify:
+    - restart docker
+  

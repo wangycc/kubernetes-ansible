@@ -1,0 +1,59 @@
+---
+- name: Create the iam role for the kubernetes master
+  iam:
+    iam_type: role
+    region: "{{ region }}"
+    name: kubernetes-master
+    state: present
+    trust_policy:
+      Version: '2012-10-17'
+      Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: ec2.amazonaws.com
+  tags:
+    - role
+
+
+- name: Assign a policy called kubernetes-master to the kubernetes-master role
+  iam_policy:
+    region: "{{ region }}"
+    iam_type: role
+    iam_name: kubernetes-master
+    policy_name: kubernetes-master
+    state: present
+    policy_document: "{{ role_path }}/files/kubernetes-master-policy.json"
+
+  tags:
+    - role
+
+
+- name: Create the iam role for the kubernetes node
+  iam:
+    iam_type: role
+    region: "{{ region }}"
+    name: kubernetes-node
+    state: present
+    trust_policy:
+      Version: '2012-10-17'
+      Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: ec2.amazonaws.com
+  tags:
+    - role
+
+
+- name: Assign a policy called kubernetes-node to the kubernetes-node role
+  iam_policy:
+    region: "{{ region }}"
+    iam_type: role
+    iam_name: kubernetes-node
+    policy_name: kubernetes-node
+    state: present
+    policy_document: "{{ role_path }}/files/kubernetes-node-policy.json"
+
+  tags:
+    - role

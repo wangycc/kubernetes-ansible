@@ -1,0 +1,8 @@
+---
+- name: Deploy node
+  hosts: docker
+  become: true
+  roles:
+    - docker
+  tags:
+    - docker

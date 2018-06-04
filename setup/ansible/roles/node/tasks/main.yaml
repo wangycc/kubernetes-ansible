@@ -1,0 +1,75 @@
+---
+
+- name: Install dependency package
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - socat
+    - conntrack-tools
+    
+- name: Create the kubelet data directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - "{{ kubernetes_log_dir }}"
+    - "{{ kubernetes_conf_dir }}"
+    - "{{ kubernetes_bin_dir }}"
+    - /var/lib/kubelet
+
+- include: cert.yaml
+
+- name: write the kubelet.kubeconfig(auth) file for kubelet
+  template:
+    src: kubelet.kubeconfig
+    dest: "{{ kubernetes_conf_dir }}/kubelet.kubeconfig"
+    backup: yes
+  notify: restart kubelet
+- name: write the kube-proxy.kubeconfig(auth) file for kube-proxy
+  template:
+    src: kube-proxy.kubeconfig
+    dest: "{{ kubernetes_conf_dir }}/kube-proxy.kubeconfig"
+    backup: yes
+  notify: restart kube-proxy
+  
+- name: Copy the binary file to node instance.
+  copy:
+    src: "{{ resources_dir }}/bin/{{ item }}" 
+    dest: "{{ kubernetes_bin_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+    backup: True
+  with_items:
+    - kubelet
+    - kube-proxy
+
+- name: Create kubernets node Configuration file
+  template:
+    src: "{{ role_path  }}/templates/{{ item  }}"
+    dest: "{{ kubernetes_conf_dir }}/{{ item  }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - kubelet
+    - proxy
+  notify:
+    - restart kubelet
+  register: change_kubelet_config
+
+- include: centos.yml
+  when: ansible_distribution == 'CentOS' and ansible_distribution_version >= 7
+  
+- include: ubuntu.yml
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'
+
+- name: Get kubernetes node status
+  command: |-
+    {{ kubernetes_bin_dir }}/kubectl --kubeconfig="{{ kubernetes_conf_dir }}/kubectl.kubeconfig" get node
+  delegate_to: "{{ groups['masters'][0] }}"
+  run_once: yes
+  register: kubernetes_cluster_status
+- debug: var=kubernetes_cluster_status.stdout_lines

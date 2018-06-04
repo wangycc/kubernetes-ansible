@@ -1,0 +1,8 @@
+---
+- name: Deploy node
+  hosts: localhost
+  become: false
+  roles:
+    - local
+  tags:
+    - local

@@ -1,0 +1,33 @@
+---
+- name: Create the nginx configuration directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - "{{ nginx_conf_dir }}"
+
+- name: Create nginx Configuration file
+  template:
+    src: "{{ role_path  }}/templates/{{ item  }}"
+    dest: "{{ nginx_conf_dir }}/{{ item  }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - nginx.conf
+  notify:
+    - restart nginx-proxy
+
+- name: Create nginx systemd file
+  template:
+    src: "{{ role_path  }}/templates/service/nginx-proxy.service"
+    dest: "/usr/lib/systemd/system/nginx-proxy.service"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - nginx.conf
+  notify:
+    - restart nginx-proxy
+

@@ -1,0 +1,32 @@
+description "Kube-proxy"
+
+start on runlevel [2345]
+stop on shutdown
+
+limit nofile 65536 65536
+respawn
+respawn limit 15 5
+
+console log
+
+pre-start script
+	# see also https://github.com/jainvipin/kubernetes-ubuntu-start
+	KUBELET={{ kubernetes_bin_dir }}/$UPSTART_JOB
+	if [ -f {{ kubernetes_conf_dir }}/proxy ]; then
+		. {{ kubernetes_conf_dir }}/proxy
+	fi
+	if [ -f $KUBELET ]; then
+		exit 0
+	fi
+    exit 22
+end script
+
+script
+    if [ -f {{ kubernetes_conf_dir }}/proxy ];then
+        . {{ kubernetes_conf_dir}}/proxy
+    fi
+    exec {{ kubernetes_bin_dir }}/kube-proxy $KUBE_LOGTOSTDERR \
+        $KUBE_LOG_LEVEL \
+        $KUBE_LOG_DIR \
+        $KUBE_PROXY_ARGS
+end script

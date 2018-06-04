@@ -1,0 +1,15 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kubernetes-monitoring-influxdb
+  namespace: kube-system
+spec:
+  rules:
+    - host: influxdb.k8s.mechat.im
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: monitoring-influxdb
+              servicePort: 8086

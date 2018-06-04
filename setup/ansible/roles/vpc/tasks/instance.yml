@@ -1,0 +1,51 @@
+---
+
+- name: Create an instances for master 
+  ec2:
+    key_name: "{{ item.keypair }}"
+    region: "{{ region }}"
+    instance_type: "{{ item.instance_type }}"
+    image: "{{ item.image}}"
+    wait: true
+    wait_timeout: 500
+    instance_tags:
+      KubernetesCluster: "{{ k8s_cluster }}"
+      Name: "{{ item.name }}"
+    instance_profile_name: "{{ item.instance_profile_name }}"
+    exact_count: 1
+    count_tag:
+      KubernetesCluster: "{{ k8s_cluster }}"
+      Name: "{{ item.name }}"
+    group: "{{ item.security_group }}"
+    monitoring: true
+    vpc_subnet_id: "{{ _subnet.results | selectattr('item.route', 'equalto', 'Private')|map(attribute='subnet.id')|list|random}}"
+  with_items: "{{vpc_instances_master}}"
+  register: _ec2_master
+  tags:
+    - ec2_master
+
+- debug: var=_ec2_master verbosity=1
+
+- name: Create an instances for node 
+  ec2:
+    key_name: "{{ item.keypair }}"
+    region: "{{ region }}"
+    instance_type: "{{ item.instance_type }}"
+    image: "{{ item.image}}"
+    wait: true
+    wait_timeout: 500
+    instance_tags:
+      KubernetesCluster: "{{ k8s_cluster }}"
+      Name: "{{ item.name }}"
+    instance_profile_name: "{{ item.instance_profile_name }}"
+    exact_count: 1
+    count_tag:
+      KubernetesCluster: "{{ k8s_cluster }}"
+      Name: "{{ item.name }}"
+    group: "{{ item.security_group }}"
+    monitoring: true
+    vpc_subnet_id: "{{ _subnet.results | selectattr('item.route', 'equalto', 'Private')|map(attribute='subnet.id')|list|random}}"
+  with_items: "{{vpc_instances_node}}"
+  register: _ec2_node
+  tags:
+    - ec2_node

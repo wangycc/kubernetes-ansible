@@ -1,0 +1,26 @@
+---
+- name: Deploy ssl
+  become: true
+  hosts: localhost
+  connection: local
+  roles:
+    - ssl
+- name: Deploy node
+  hosts: masters
+  become: true
+  roles:
+    - etcd
+  tags:
+    - etcd
+- name: Deploy node
+  hosts: masters
+  become: true
+  roles:
+    - master
+- name: Deploy node
+  hosts: nodes
+  become: true
+  roles:
+    - node
+  tags:
+    - nodes

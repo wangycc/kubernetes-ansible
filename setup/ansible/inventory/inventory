@@ -1,0 +1,21 @@
+[nodes]
+10.100.1.63 kubelet_label=department=livechat,node-role.kubernetes.io/node=true
+10.100.0.12 kubelet_label=department=livechat,node-role.kubernetes.io/node=true
+10.100.1.20 kubelet_label=node-role.kubernetes.io/master=true
+10.100.1.72 kubelet_label=node-role.kubernetes.io/master=true
+10.100.0.123 kubelet_label=node-role.kubernetes.io/master=true
+
+[etcd]
+10.100.1.20
+10.100.1.72
+10.100.0.123
+
+[masters]
+10.100.1.20
+10.100.1.72
+10.100.0.123
+
+[all:vars]
+# common,aws
+provider=common
+apiserver_https_port=6443

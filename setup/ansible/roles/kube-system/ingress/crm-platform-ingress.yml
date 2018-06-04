@@ -1,0 +1,89 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: implement
+  namespace: crm-platform
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: implement-sandbox.int.mechatim.com
+      http:
+        paths:
+          - path: /tri
+            backend:
+              serviceName: tri
+              servicePort: 7003
+          - path: /meta-manager
+            backend:
+              serviceName: meta-manager
+              servicePort: 7020
+          - path: /one
+            backend:
+              serviceName: one
+              servicePort: 7010
+          - path: /layout
+            backend:
+              serviceName: layout
+              servicePort: 7190
+          - path: /data-transform
+            backend:
+              serviceName: data-transform
+              servicePort: 7021
+          - path: /cron-job
+            backend:
+              serviceName: cron-job
+              servicePort: 7146
+          - path: /notification-gateway
+            backend:
+              serviceName: notification-gateway
+              servicePort: 7522
+          - path: /push-manager-gateway
+            backend:
+              serviceName: push-manager-gateway
+              servicePort: 7181
+          - path: /report-manager
+            backend:
+              serviceName: report-manager
+              servicePort: 7160
+          - path: /tableau-proxy
+            backend:
+              serviceName: tableau-proxy
+              servicePort: 7161
+          - path: /tenant-gateway
+            backend:
+              serviceName: tenant-gateway
+              servicePort: 7121
+          - path: /judge-admin
+            backend:
+              serviceName: judge-admin
+              servicePort: 7111
+          - path: /territory
+            backend:
+              serviceName: territory
+              servicePort: 7131
+          - path: /account
+            backend:
+              serviceName: account
+              servicePort: 7130
+          - path: /feedback
+            backend:
+              serviceName: feedback
+              servicePort: 7040
+          - path: /app-version
+            backend:
+              serviceName: app-version
+              servicePort: 7170
+          - path: /tri-file
+            backend:
+              serviceName: tri-file
+              servicePort: 7001
+          - path: /tri-patcher
+            backend:
+              serviceName: tri-patcher
+              servicePort: 7004
+          - path: /api-document
+            backend:
+              serviceName: api-document
+              servicePort: 7220

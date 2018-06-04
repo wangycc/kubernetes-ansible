@@ -1,0 +1,54 @@
+---
+- name: Insert flannel configuration into etcd
+  command: |-
+    {{ etcd_bin_dir }}/etcdctl --ca-file={{ etcd_peer_ca_file }} \
+    --cert-file={{ etcd_peer_cert_file }} --key-file={{ etcd_peer_key_file }} \
+    set {{ flannel_key}}  \
+    '{"Network":"{{ flannel_network}}","SubnetLen":{{ flannel_subnet_len }},"Backend":{"Type":"{{ flannel_backend_type}}"}}' 
+  delegate_to: "{{ groups['etcd'][0] }}"
+  run_once: yes
+
+- name: Create the flannel log directory
+  file:
+    path: "{{ item }}" 
+    state: directory
+    mode: 0755
+  with_items:
+    - "{{ flannel_log_dir }}"
+    - "{{ flannel_conf_dir }}"
+    - "{{ flannel_bin_dir }}"
+    - "{{ cert_dir  }}"
+    - /usr/lib/systemd/system/docker.service.d
+
+- name: slurp CA certificate from ansible host
+  slurp: src={{ cert_dir_tmp  }}/{{ item  }}
+  with_items:
+    - kubernetes-key.pem
+    - kubernetes.pem
+    - ca.pem
+  register: pki_certs
+  run_once: true
+  delegate_to: localhost
+
+- name: write CA certificate from ansible host to disk
+  copy: dest={{ cert_dir  }}/{{ item.item  }} content="{{ item.content | b64decode  }}"
+  register: openssl_cert
+  with_items: "{{ pki_certs.results  }}"
+
+- name: Copy binary to node instance
+  copy:
+    src: "{{ resources_dir }}/bin/{{ item }}"
+    dest: "{{ flannel_bin_dir }}/{{ item }}"
+    owner: root
+    group: root
+    backup: True
+    mode: 0755
+  with_items:
+    - flanneld
+    - mk-docker-opts.sh
+
+- include: centos.yml
+  when: ansible_distribution == 'CentOS' and ansible_distribution_version >= 7
+
+- include: ubuntu.yml
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'

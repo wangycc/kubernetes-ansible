@@ -1,0 +1,28 @@
+---
+
+- name: Create flanneld upstart script
+  template:
+    src: "{{ role_path }}/templates/flanneld.upstart.j2"
+    dest: /etc/init/flanneld.conf
+  register: change_flanneld_upstart
+
+- name: start and enable flanneld on node
+  when: change_flanneld_upstart
+  service:
+    name: flanneld
+    state: restarted
+
+- name: slurp docker env  from ubuntu
+  slurp: src=/run/flannel/docker
+  register: DOCKER_OPTIONS
+
+- name: Configure environment variables for docker
+  lineinfile:
+    dest: /etc/default/docker
+    line: "{{ DOCKER_OPTIONS.content | b64decode  }}"
+  notify:
+    - restart docker
+
+
+
+  

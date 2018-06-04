@@ -1,0 +1,69 @@
+---
+
+- name: Create directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - "{{ etcd_conf_dir }}"
+    - "{{ etcd_bin_dir }}"
+    - "{{ etcd_data_dir }}"
+
+- include: cert.yaml 
+
+- name: Copy the binary file to node instance.
+  copy:
+    src: "{{ resources_dir }}/bin/{{ item }}" 
+    dest: "{{ etcd_bin_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - etcd
+    - etcdctl
+
+- name: Create etcd Configuration file
+  template:
+    src: "{{ role_path }}/templates/{{ item }}"
+    dest: "{{ etcd_conf_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - etcd.conf
+  register: change_etcd_config
+
+- name: Copy the systemd unit file to node
+  template:
+    src: "{{ role_path }}/templates/service/{{ item }}"
+    dest: "/usr/lib/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - etcd.service
+  register: change_etcd_system
+
+- name: start and enable etcd service
+  when: change_etcd_system|succeeded and change_etcd_system|succeeded
+  systemd:
+    name: etcd
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: reload etcd service
+  when: change_etcd_config|changed or change_etcd_system|changed
+  systemd:
+    name: etcd
+    state: restarted
+    daemon_reload: true
+- name: get etcd status
+  command: |-
+    {{ etcd_bin_dir }}/etcdctl --ca-file={{ etcd_peer_ca_file }} \
+    --cert-file={{ etcd_peer_cert_file }} --key-file={{ etcd_peer_key_file}} cluster-health
+  delegate_to: "{{ groups['etcd'][0] }}"
+  run_once: yes
+  register: etcd_status
+- debug: var=etcd_status.stdout_lines

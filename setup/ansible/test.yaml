@@ -1,0 +1,7 @@
+---
+- hosts: nodes
+  tasks:
+    - debug: var=ansible_distribution
+    - debug: var=ansible_distribution_version
+  
+

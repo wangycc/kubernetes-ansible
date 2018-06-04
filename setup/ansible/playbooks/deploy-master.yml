@@ -1,0 +1,6 @@
+---
+- name: Deploy node
+  hosts: masters
+  become: true
+  roles:
+    - master

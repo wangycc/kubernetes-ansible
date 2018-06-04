@@ -1,0 +1,50 @@
+---
+
+- name: Create a system unit file
+  template:
+    src: "{{ role_path }}/templates/flanneld.service"
+    dest: /usr/lib/systemd/system/flanneld.service
+    owner: root
+    group: root
+    mode: 0644
+  register: change_flannel_system
+
+- name: Create the flanneld configuration file
+  template:
+    src: "{{ role_path }}/templates/flanneld.conf"
+    dest: "{{ flannel_conf_dir }}/flanneld"
+    owner: root
+    group: root
+    mode: 0644
+  register: change_flannel_config
+
+- name: Configure environment variables for docker
+  # flanneld 启动时将网络配置写入到 /run/flannel/docker 文件中的变量
+  # DOCKER_NETWORK_OPTIONS，dockerd 命令行上指定该变量值来设置 docker0
+  # 网桥参数；
+  # 如果在启动配置文件指定了多个 EnvironmentFile 选项，则必须将
+  # /run/flannel/docker 放在最后
+  template:
+    src: "{{ role_path }}/templates/docker.service.d/flannel.conf"
+    dest: "/usr/lib/systemd/system/docker.service.d/flannel.conf"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: start and enable flannel on node
+  when: change_flannel_system|succeeded and change_flannel_config|succeeded
+  systemd:
+    name: flanneld
+    enabled: true
+    state: started
+  notify:
+    - restart docker
+
+#- name: reload flanneld
+#  when: change_flannel_system|changed or change_flannel_config|changed
+#  systemd:
+#    name: flanneld
+#    state: restarted
+#    daemon_reload: true
+#  notify:
+#    - restart docker

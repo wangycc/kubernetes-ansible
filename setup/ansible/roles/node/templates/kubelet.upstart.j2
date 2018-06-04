@@ -1,0 +1,37 @@
+description "Kubelet"
+
+start on runlevel [2345]
+stop on shutdown
+
+respawn
+respawn limit 15 5
+
+console log
+
+chdir /var/lib/kubelet
+
+pre-start script
+	# see also https://github.com/jainvipin/kubernetes-ubuntu-start
+	KUBELET={{ kubernetes_bin_dir }}/$UPSTART_JOB
+	if [ -f {{ kubernetes_conf_dir }}/$UPSTART_JOB ]; then
+		. {{ kubernetes_conf_dir }}/$UPSTART_JOB
+	fi
+	if [ -f $KUBELET ]; then
+		exit 0
+	fi
+    exit 22
+end script
+
+script
+    if [ -f {{ kubernetes_conf_dir }}/$UPSTART_JOB ];then
+        . {{ kubernetes_conf_dir}}/$UPSTART_JOB
+    fi
+    exec {{ kubernetes_bin_dir }}/kubelet $KUBE_LOGTOSTDERR $KUBE_LOG_LEVEL\
+        $KUBE_LOG_DIR\
+        $KUBELET_ADDRESS\
+        $KUBELET_PORT\
+        $KUBELET_HOSTNAME\
+        $KUBE_ALLOW_PRIV\
+        $KUBELET_POD_INFRA_CONTAINER\
+        $KUBELET_ARGS
+end script

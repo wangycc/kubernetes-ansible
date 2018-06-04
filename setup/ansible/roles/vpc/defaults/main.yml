@@ -1,0 +1,70 @@
+---
+vpc:
+  name: "{{ k8s_cluster }}-vpc"
+  cidr_block: 10.222.0.0/16
+subnet:
+  - name: "{{ k8s_cluster }}_public_{{ region }}a"
+    az: "{{ region }}a" 
+    cidr: 10.222.1.0/24
+    route: Public
+  - name: "{{ k8s_cluster }}_public_{{ region }}b"
+    az: "{{ region }}b"
+    cidr: 10.222.3.0/24
+    route: Public
+  - name: "{{ k8s_cluster }}_private_{{ region }}a"
+    az: "{{ region }}a"
+    cidr: 10.222.2.0/24
+    route: Private
+  - name: "{{ k8s_cluster }}_private_{{ region }}b"
+    az: "{{ region }}b"
+    cidr: 10.222.4.0/24
+    route: Private
+
+vpc_instances_master:
+  - instance_type: "{{master_instance_type}}"
+    name: "{{ k8s_cluster }}_master-01"
+    image: "{{ master_image }}"
+    keypair: "{{ key_pair }}"
+    security_group: "{{ master_security_group }}"
+    instance_profile_name: kubernetes-master
+    role: master
+
+  - instance_type: "{{master_instance_type}}"
+    name: "{{ k8s_cluster }}_master-02"
+    image: "{{ master_image }}"
+    keypair: "{{ key_pair }}"
+    security_group: "{{ master_security_group }}"
+    instance_profile_name: kubernetes-master
+    role: master
+
+  - instance_type: "{{master_instance_type}}"
+    name: "{{ k8s_cluster }}_master-03"
+    image: "{{ master_image }}"
+    keypair: "{{ key_pair }}"
+    security_group: "{{ master_security_group }}"
+    instance_profile_name: kubernetes-master
+    role: master
+
+vpc_instances_node:
+  - instance_type: "{{node_instance_type}}"
+    name: "{{ k8s_cluster }}_node-01"
+    image: "{{ node_image }}"
+    keypair: "{{ key_pair }}"
+    security_group: "{{ node_security_group }}"
+    instance_profile_name: kubernetes-node
+    role: node
+
+  - instance_type: "{{node_instance_type}}"
+    name: "{{ k8s_cluster }}_node-02"
+    image: "{{ node_image }}"
+    keypair: "{{ key_pair }}"
+    security_group: "{{ node_security_group }}"
+    instance_profile_name: kubernetes-node
+    role: node
+  - instance_type: "{{node_instance_type}}"
+    name: "{{ k8s_cluster }}_node-03"
+    image: "{{ node_image }}"
+    keypair: "{{ key_pair }}"
+    security_group: "{{ node_security_group }}"
+    instance_profile_name: kubernetes-node
+    role: node

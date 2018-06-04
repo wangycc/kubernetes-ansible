@@ -1,0 +1,101 @@
+---
+- name: Create the master  data directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - "{{ master_log_dir }}"
+    - "{{ master_conf_dir }}"
+    - "{{ master_bin_dir }}"
+
+- include: cert.yaml
+
+- name: write the kubectl.kubeconfig (auth) file for kubectl
+  template:
+    src: kubectl.kubeconfig
+    dest: "{{ kubernetes_conf_dir }}/kubectl.kubeconfig"
+
+- name: Create TLS Bootstrapping Token
+  template:
+    src: "{{ role_path }}/templates/token.csv"
+    dest: /etc/kubernetes
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy the binary file to master instance.
+  copy:
+    src: "{{ resources_dir }}/bin/{{ item }}"
+    dest: "{{ master_bin_dir}}/{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+    - kubectl
+  
+
+- name: Create kubernets master Configuration file
+  template:
+    src: "{{ role_path  }}/templates/{{ item  }}"
+    dest: "{{ master_conf_dir}}/{{ item  }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - apiserver
+    - controller-manager
+    - config
+    - scheduler
+  register: change_master_config
+
+- name: Copy the systemd unit file to node
+  template:
+    src: "{{ role_path }}/templates/service/{{ item }}"
+    dest: "/usr/lib/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - kube-apiserver.service
+    - kube-controller-manager.service
+    - kube-scheduler.service
+  register: change_master_system
+
+- name: start and enable master service
+  when: change_master_system|succeeded and change_master_system|succeeded
+  systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+- name: reload node service
+  when: change_master_system|changed or change_master_config|changed
+  systemd:
+    name: "{{ item  }}"
+    state: restarted
+    daemon_reload: true
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+- name: Get kubernetes cluster status
+  command: |-
+    {{ kubernetes_bin_dir }}/kubectl --kubeconfig="{{ kubernetes_conf_dir }}/kubectl.kubeconfig" get cs
+  run_once: yes
+  register: kubernetes_cluster_status
+- debug: var=kubernetes_cluster_status.stdout_lines
+
+- name: Fix RBAC. add the system:nodes group binding to the clusterrolebinding system:node subjects section
+  command: |-
+    {{ kubernetes_bin_dir }}/kubectl --kubeconfig="{{ kubernetes_conf_dir }}/kubectl.kubeconfig" set subject clusterrolebinding system:node --group=system:nodes
+  run_once: yes
+  register: binding_group_to_clusterrole
+- debug: var=binding_group_to_clusterrole.stdout_lines
